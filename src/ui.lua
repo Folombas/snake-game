@@ -3,7 +3,18 @@ UI = {
 }
 
 function UI:init(game)
-    self.font = love.graphics.newFont(24)
+    -- Загрузка шрифта с поддержкой кириллицы
+    local fontPath = "assets/fonts/Roboto-VariableFont_wdth,wght.ttf"
+
+    -- Проверка существования файла шрифта
+    local fontInfo = love.filesystem.getInfo(fontPath)
+    if fontInfo then
+        self.font = love.graphics.newFont(fontPath, 24)
+    else
+        -- Если файл не найден, используем системный шрифт
+        print("Предупреждение: Шрифт не найден - " .. fontPath)
+        self.font = love.graphics.newFont(24)
+    end
 end
 
 function UI:draw(game)

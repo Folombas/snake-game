@@ -14,3 +14,15 @@ end
 function love.keypressed(key)
     Game:keypressed(key) -- Обрабатываем нажатие клавиш
 end
+
+function love.errorhandler(msg)
+    print("Error: " .. msg)
+    print(debug.traceback())
+
+    return function()
+        love.graphics.clear(0.1, 0.1, 0.1)
+        love.graphics.setColor(1, 0, 0)
+        love.graphics.printf("ERROR: " .. msg, 50, 50, love.graphics.getWidth() - 100, "left")
+        love.graphics.present()
+    end
+end
