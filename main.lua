@@ -1,6 +1,7 @@
 function love.load()
-    require("src.game") -- Загружаем игровую логику
-    Game:init()         -- Инициализируем игру
+    require("src.game")    -- Загружаем игровую логику
+    require("src.records") -- Загружаем систему рекордов
+    Game:init()            -- Инициализируем игру
 end
 
 function love.update(dt)
@@ -8,13 +9,14 @@ function love.update(dt)
 end
 
 function love.draw()
-    Game:draw() -- Рисуем игровое поле
+    Game:draw() -- Отрисовка игры
 end
 
 function love.keypressed(key)
-    Game:keypressed(key) -- Обрабатываем нажатие клавиш
+    Game:keypressed(key) -- Обработка нажатий клавиш
 end
 
+-- Обработчик ошибок для отладки
 function love.errorhandler(msg)
     print("Error: " .. msg)
     print(debug.traceback())
