@@ -1,30 +1,87 @@
 function love.load()
-    require("src.game")    -- Загружаем игровую логику
-    require("src.records") -- Загружаем систему рекордов
-    Game:init()            -- Инициализируем игру
+    -- Загрузка менеджера ресурсов с защитой от ошибок
+    local resourceSuccess, resourceError = pcall(function()
+        require "src.lib.resource_manager"
+        ResourceManager.loadAssets()
+    end)
+
+    if not resourceSuccess then
+        print("Ошибка загрузки ресурсов: " .. resourceError)
+        -- Создаем запасные ресурсы
+        ResourceManager = {
+            fonts = {
+                bold = love.graphics.newFont(24),
+                regular = love.graphics.newFont(18)
+            },
+            sounds = {}
+        }
+    end
+
+    -- Загрузка игровых модулей с защитой от ошибок
+    local gameModules = {
+        "src.game",
+        "src.snake",
+        "src.food",
+        "src.ui",
+        "src.records",
+        "src.achievements"
+    }
+
+    for _, module in ipairs(gameModules) do
+        local success, err = pcall(require, module)
+        if not success then
+            print("Ошибка загрузки модуля " .. module .. ": " .. err)
+        end
+    end
+
+    -- Инициализация игры с защитой от ошибок
+    local initSuccess, initError = pcall(Game.init)
+    if not initSuccess then
+        print("Ошибка инициализации игры: " .. initError)
+        Game.state = "error"
+        Game.errorMessage = "Ошибка инициализации: " .. initError
+    end
 end
 
 function love.update(dt)
-    Game:update(dt) -- Обновление состояния игры
+    if Game.update and Game.state ~= "error" then
+        local success, err = pcall(Game.update, dt)
+        if not success then
+            print("Ошибка в Game.update: " .. err)
+            Game.state = "error"
+            Game.errorMessage = "Ошибка обновления: " .. err
+        end
+    end
 end
 
 function love.draw()
-    Game:draw() -- Отрисовка игры
+    if Game.draw and Game.state ~= "error" then
+        local success, err = pcall(Game.draw)
+        if not success then
+            print("Ошибка в Game.draw: " .. err)
+            love.graphics.setColor(1, 0, 0)
+            love.graphics.print("Ошибка отрисовки: " .. err, 100, 100)
+        end
+    elseif Game.state == "error" then
+        love.graphics.setColor(1, 0, 0)
+        love.graphics.setFont(ResourceManager.fonts.bold)
+        love.graphics.print("ПРОИЗОШЛА ОШИБКА", 100, 100)
+        love.graphics.setFont(ResourceManager.fonts.regular)
+        love.graphics.print(Game.errorMessage, 100, 150)
+        love.graphics.print("Проверьте консоль для подробностей", 100, 200)
+        love.graphics.print("Нажмите ESC для выхода", 100, 250)
+    end
 end
 
 function love.keypressed(key)
-    Game:keypressed(key) -- Обработка нажатий клавиш
-end
-
--- Обработчик ошибок для отладки
-function love.errorhandler(msg)
-    print("Error: " .. msg)
-    print(debug.traceback())
-
-    return function()
-        love.graphics.clear(0.1, 0.1, 0.1)
-        love.graphics.setColor(1, 0, 0)
-        love.graphics.printf("ERROR: " .. msg, 50, 50, love.graphics.getWidth() - 100, "left")
-        love.graphics.present()
+    if Game.keypressed and Game.state ~= "error" then
+        local success, err = pcall(Game.keypressed, key)
+        if not success then
+            print("Ошибка в Game.keypressed: " .. err)
+            Game.state = "error"
+            Game.errorMessage = "Ошибка обработки ввода: " .. err
+        end
+    elseif key == "escape" then
+        love.event.quit()
     end
 end

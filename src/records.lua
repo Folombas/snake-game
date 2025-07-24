@@ -1,42 +1,22 @@
 Records = {
-    file = "records.txt",
-    scores = {}
+    filename = "records.dat"
 }
 
-function Records:load()
-    if love.filesystem.getInfo(self.file) then
-        local contents = love.filesystem.read(self.file)
-        self.scores = {}
-        for score in contents:gmatch("%d+") do
-            table.insert(self.scores, tonumber(score))
-        end
-        table.sort(self.scores, function(a, b) return a > b end)
-    else
-        -- Начальные значения рекордов
-        self.scores = { 300, 250, 200, 150, 100 }
-        self:saveScores()
+function Records.load()
+    if not love.filesystem.getInfo(Records.filename) then
+        love.filesystem.write(Records.filename, "0")
     end
 end
 
-function Records:saveScores()
-    local content = table.concat(self.scores, "\n")
-    love.filesystem.write(self.file, content)
-end
-
-function Records:save(score)
-    table.insert(self.scores, score)
-    table.sort(self.scores, function(a, b) return a > b end)
-
-    -- Сохраняем только топ-5
-    if #self.scores > 5 then
-        self.scores = { table.unpack(self.scores, 1, 5) }
+function Records.save(score)
+    local currentHigh = Records.getHighScore()
+    if score > currentHigh then
+        love.filesystem.write(Records.filename, tostring(score))
     end
-
-    self:saveScores()
 end
 
-function Records:isHighScore(score)
-    return #self.scores < 5 or score > self.scores[#self.scores]
+function Records.getHighScore()
+    Records.load()
+    local content = love.filesystem.read(Records.filename)
+    return tonumber(content) or 0
 end
-
-return Records

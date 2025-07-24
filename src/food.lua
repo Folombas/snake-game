@@ -1,31 +1,30 @@
 Food = {
-    x = 0,
-    y = 0
+    position = { x = 0, y = 0 },
+    color = { 1, 0.2, 0.2 } -- Красный
 }
 
-function Food:spawn(game)
-    -- Генерация случайной позиции
-    self.x = math.random(0, game.width - 1)
-    self.y = math.random(0, game.height - 1)
+function Food.spawn()
+    local w = math.floor(love.graphics.getWidth() / Game.gridSize)
+    local h = math.floor(love.graphics.getHeight() / Game.gridSize)
 
-    -- Проверка, чтобы еда не появилась на змейке
-    for _, segment in ipairs(game.Snake.body) do
-        if segment.x == self.x and segment.y == self.y then
-            return self:spawn(game) -- Рекурсия, если позиция занята
+    Food.position = {
+        x = math.random(1, w),
+        y = math.random(1, h)
+    }
+
+    -- Убедимся, что еда не появляется на змейке
+    for _, segment in ipairs(Snake.position) do
+        if segment.x == Food.position.x and segment.y == Food.position.y then
+            return Food.spawn()
         end
     end
 end
 
-function Food:draw(game)
-    -- Отрисовка еды
-    love.graphics.setColor(1, 0, 0) -- Красный цвет
-    love.graphics.rectangle(
-        "fill",
-        self.x * game.gridSize,
-        self.y * game.gridSize,
-        game.gridSize - 1,
-        game.gridSize - 1
-    )
+function Food.draw()
+    love.graphics.setColor(Food.color)
+    love.graphics.rectangle("fill",
+        (Food.position.x - 1) * Game.gridSize,
+        (Food.position.y - 1) * Game.gridSize,
+        Game.gridSize, Game.gridSize, 5)
+    love.graphics.setColor(1, 1, 1)
 end
-
-return Food
